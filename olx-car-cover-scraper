@@ -1,0 +1,39 @@
+import requests
+from bs4 import BeautifulSoup
+import csv
+
+# Define the URL
+url = "https://www.olx.in/items/q-car-cover"
+
+# Define headers to mimic a browser
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+}
+
+# Send GET request
+response = requests.get(url, headers=headers)
+
+# Check if request succeeded
+if response.status_code == 200:
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    # Extract product listings
+    listings = soup.find_all('li', class_='EIR5N')  # OLX structure may change
+
+    # Open a CSV file to store results
+    with open('car_cover_olx_results.csv', 'w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        writer.writerow(['Title', 'Price', 'Location', 'Link'])
+
+        for listing in listings:
+            title = listing.find('span', class_='_2tW1I').text if listing.find('span', class_='_2tW1I') else 'N/A'
+            price = listing.find('span', class_='_89yzn').text if listing.find('span', class_='_89yzn') else 'N/A'
+            location = listing.find('span', class_='tjgMj').text if listing.find('span', class_='tjgMj') else 'N/A'
+            link_tag = listing.find('a')
+            link = 'https://www.olx.in' + link_tag['href'] if link_tag else 'N/A'
+
+            writer.writerow([title, price, location, link])
+
+    print("Search results saved to car_cover_olx_results.csv")
+else:
+    print("Failed to fetch the page. Status code:", response.status_code)
